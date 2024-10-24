@@ -1,9 +1,12 @@
-﻿using Barathrum.GamesSync.Steam;
+﻿using Barathrum.GamesSync.Notion;
+using Barathrum.GamesSync.Steam;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 
 Console.WriteLine("Hello, World!");
+
+// ----------------- configure -----------------------
 
 var builder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -12,9 +15,12 @@ var builder = new ConfigurationBuilder()
 var config = builder.Build();
 var services = new ServiceCollection();
 
+var notionConfig = config.GetSection("Notion").Get<NotionConfig>()
+    ?? throw new Exception("Notion config is null");
 var steamConfig = config.GetSection("Steam").Get<SteamConfig>() 
     ?? throw new Exception("Steam config is null");
 
+services.AddSingleton(notionConfig);
 services.AddSingleton(steamConfig);
 services.AddHttpClient<SteamClient>(client =>
 {
@@ -24,6 +30,8 @@ services.AddHttpClient<SteamClient>(client =>
 
 var serviceProvider = services.BuildServiceProvider();
 
+
+// --------------- run the app ------------------------
 
 var client = serviceProvider.GetRequiredService<SteamClient>();
 var games = new HashSet<string>();
