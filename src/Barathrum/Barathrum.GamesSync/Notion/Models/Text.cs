@@ -2,7 +2,7 @@
 {
     internal class Text
     {
-        public required string Content { get; init; }
-        public string? Link { get; init; }
+        public required string content { get; init; }
+        public string? link { get; init; }
     }
 }

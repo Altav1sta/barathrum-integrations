@@ -2,6 +2,8 @@
 using Barathrum.GamesSync.Steam;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 
 Console.WriteLine("Hello, World!");
@@ -22,6 +24,14 @@ var steamConfig = config.GetSection("Steam").Get<SteamConfig>()
 
 services.AddSingleton(notionConfig);
 services.AddSingleton(steamConfig);
+
+services.AddHttpClient<NotionClient>(client =>
+{
+    client.BaseAddress = new Uri(notionConfig.BaseAddress);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("Notion-Version", notionConfig.Version);
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", notionConfig.Secret);
+});
 services.AddHttpClient<SteamClient>(client =>
 {
     client.BaseAddress = new Uri(steamConfig.BaseAddress);
@@ -33,15 +43,17 @@ var serviceProvider = services.BuildServiceProvider();
 
 // --------------- run the app ------------------------
 
-var client = serviceProvider.GetRequiredService<SteamClient>();
-var games = new HashSet<string>();
+var client = serviceProvider.GetRequiredService<NotionClient>();
+var db = await client.GetDatabase();
+var resultView = JsonSerializer.Serialize(db, client.JsonOptions);
+//var games = new HashSet<string>();
 
-foreach (var account in steamConfig.Accounts)
-{
-    var response = await client.GetPaidGamesList(account);
-    games.UnionWith(response.Games.Select(x => x.Name!));
-}
+//foreach (var account in steamConfig.Accounts)
+//{
+//    var response = await client.GetPaidGamesList(account);
+//    games.UnionWith(response.Games.Select(x => x.Name!));
+//}
 
-var names = string.Join("\n\r", games);
+//var names = string.Join("\r\n", games);
 
-Console.WriteLine(names);
+Console.WriteLine(resultView);

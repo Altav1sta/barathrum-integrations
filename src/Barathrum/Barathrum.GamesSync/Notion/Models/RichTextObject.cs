@@ -8,8 +8,8 @@ namespace Barathrum.GamesSync.Notion.Models
         public Text? text { get; init; }
         public Mention? mention { get; init; }
         public Equation? equation { get; init; }
-        public required Annotation annotations { get; init; }
-        public required string plain_text { get; init; }
+        public Annotation? annotations { get; init; }
+        public string? plain_text { get; init; }
         public string? href { get; init; }
     }
 }
