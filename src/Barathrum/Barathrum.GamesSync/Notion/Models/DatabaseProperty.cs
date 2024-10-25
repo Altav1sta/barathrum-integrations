@@ -5,7 +5,7 @@ namespace Barathrum.GamesSync.Notion.Models
     internal class DatabaseProperty
     {
         public string? id { get; init; }
-        public required DatabasePropertyType type { get; init; }
+        public PropertyType? type { get; init; }
         public string? name { get; init; }
         public string? description { get; init; }
         public object? checkbox { get; init; }

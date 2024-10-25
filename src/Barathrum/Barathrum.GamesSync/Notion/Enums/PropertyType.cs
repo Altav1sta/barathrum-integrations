@@ -1,6 +1,6 @@
 ﻿namespace Barathrum.GamesSync.Notion.Enums
 {
-    internal enum DatabasePropertyType
+    internal enum PropertyType
     {
         checkbox,
         created_by,
@@ -21,6 +21,8 @@
         select,
         status,
         title,
-        url
+        url,
+        unique_id,
+        verification
     }
 }

@@ -1,9 +1,9 @@
 ﻿using Barathrum.GamesSync.Notion;
 using Barathrum.GamesSync.Steam;
+using Barathrum.GamesSync.Steam.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Headers;
-using System.Text.Json;
 
 
 Console.WriteLine("Hello, World!");
@@ -43,17 +43,40 @@ var serviceProvider = services.BuildServiceProvider();
 
 // --------------- run the app ------------------------
 
-var client = serviceProvider.GetRequiredService<NotionClient>();
-var db = await client.GetDatabase();
-var resultView = JsonSerializer.Serialize(db, client.JsonOptions);
-//var games = new HashSet<string>();
+var notionClient = serviceProvider.GetRequiredService<NotionClient>();
+var steamClient = serviceProvider.GetRequiredService<SteamClient>();
 
-//foreach (var account in steamConfig.Accounts)
-//{
-//    var response = await client.GetPaidGamesList(account);
-//    games.UnionWith(response.Games.Select(x => x.Name!));
-//}
+var games = new Dictionary<int, Game>();
+var accounts = new Dictionary<int, HashSet<string>>();
 
-//var names = string.Join("\r\n", games);
+// get all games
+foreach (var account in steamConfig.Accounts)
+{
+    var accountGames = await steamClient.GetPaidGamesList(account);
+    
+    foreach (var game in accountGames)
+    {
+        if (!games.ContainsKey(game.AppId))
+        {
+            games[game.AppId] = game;
+        }
 
-Console.WriteLine(resultView);
+        if (accounts.TryGetValue(game.AppId, out HashSet<string>? value))
+        {
+            value.Add(account);
+        }
+        else
+        {
+            accounts[game.AppId] = [account];
+        }
+    }
+}
+
+// create all games
+foreach (var game in games.Values)
+{
+    var page = await notionClient.CreatePage(game.Name!, [.. accounts[game.AppId]], true, game.AppId, false);
+    Console.WriteLine(page.id);
+}
+
+Console.WriteLine("Bye");

@@ -8,11 +8,11 @@
 
         public DateTime? created_time { get; init; }
 
-        public PartialUser? created_by { get; init; }
+        public User? created_by { get; init; }
 
         public DateTime? last_edited_time { get; init; }
 
-        public PartialUser? last_edited_by { get; init; }
+        public User? last_edited_by { get; init; }
 
         public RichTextObject[]? title { get; init; }
 
