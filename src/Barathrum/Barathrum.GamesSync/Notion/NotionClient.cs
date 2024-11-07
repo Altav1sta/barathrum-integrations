@@ -19,7 +19,7 @@ namespace Barathrum.GamesSync.Notion
         };
 
 
-        public async Task<Page> CreatePage(string name, string[] accounts, bool paid, int appId, bool installed)
+        public async Task<Page> CreatePage(Dictionary<string, PageProperty> properties)
         {
             const string url = "v1/pages";
 
@@ -27,14 +27,6 @@ namespace Barathrum.GamesSync.Notion
             {
                 type = ParentObjectType.database_id,
                 database_id = config.DatabaseId
-            };
-            var properties = new Dictionary<string, PageProperty>
-            {
-                { "Available Accounts", new() { type = PropertyType.multi_select, multi_select = accounts.Select(x => new SelectOption { name = x }).ToArray() } },
-                { "Paid", new() { type = PropertyType.checkbox, checkbox = paid } },
-                { "appId", new() { type = PropertyType.number, number = appId } },
-                { "Installed", new() { type = PropertyType.checkbox, checkbox = installed } },
-                { "Name", new() { type = PropertyType.title, title = [ new RichTextObject { type = RichTextObjectType.Text, text = new Text { content = name } } ] } }
             };
 
             var response = await httpClient.PostAsJsonAsync(url, new { parent, properties }, JsonOptions);

@@ -1,4 +1,6 @@
 ﻿using Barathrum.GamesSync.Notion;
+using Barathrum.GamesSync.Notion.Enums;
+using Barathrum.GamesSync.Notion.Models;
 using Barathrum.GamesSync.Steam;
 using Barathrum.GamesSync.Steam.Models;
 using Microsoft.Extensions.Configuration;
@@ -75,7 +77,15 @@ foreach (var account in steamConfig.Accounts)
 // create all games
 foreach (var game in games.Values)
 {
-    var page = await notionClient.CreatePage(game.Name!, [.. accounts[game.AppId]], true, game.AppId, false);
+    var properties = new Dictionary<string, PageProperty>
+    {
+        { "Available Accounts", new() { type = PropertyType.multi_select, multi_select = accounts[game.AppId].Select(x => new SelectOption { name = x }).ToArray() } },
+        { "Paid", new() { type = PropertyType.checkbox, checkbox = true } },
+        { "appId", new() { type = PropertyType.number, number = game.AppId } },
+        { "Installed", new() { type = PropertyType.checkbox, checkbox = false } },
+        { "Name", new() { type = PropertyType.title, title = [ new RichTextObject { type = RichTextObjectType.Text, text = new Text { content = game.Name! } } ] } }
+    };
+    var page = await notionClient.CreatePage(properties);
 }
 
 Console.WriteLine("Bye");
