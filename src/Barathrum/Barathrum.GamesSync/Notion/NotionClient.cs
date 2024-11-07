@@ -38,22 +38,9 @@ namespace Barathrum.GamesSync.Notion
             };
 
             var response = await httpClient.PostAsJsonAsync(url, new { parent, properties }, JsonOptions);
+            var result = await response.GetFromResponse<Page>(JsonOptions);
 
-            try
-            {
-                response.EnsureSuccessStatusCode();
-
-                var model = await response.Content.ReadFromJsonAsync<Page>(JsonOptions)
-                    ?? throw new Exception("Can't deserialize response to model");
-
-                return model;
-            }
-            catch
-            {
-                var resultView = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(resultView);
-                throw;
-            }
+            return result;
         }
 
         public async Task<Database> GetDatabase()
@@ -61,23 +48,23 @@ namespace Barathrum.GamesSync.Notion
             const string urlFormat = "v1/databases/{0}";
 
             var response = await httpClient.GetAsync(string.Format(urlFormat, config.DatabaseId));
+            var result = await response.GetFromResponse<Database>(JsonOptions);
 
+            return result;
+        }
 
-            try
-            {
-                response.EnsureSuccessStatusCode();
+        public async Task<PagesList> QueryDatabase(string[]? filterProperties = null, FilterObject? filter = null, SortObject[]? sorts = null)
+        {
+            const string urlFormat = "v1/databases/{0}/query/{1}";
 
-                var model = await response.Content.ReadFromJsonAsync<Database>(JsonOptions)
-                    ?? throw new Exception("Can't deserialize response to model");
-                    
-                return model;
-            }
-            catch
-            {
-                var resultView = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(resultView);
-                throw;
-            }
+            var queryParams = filterProperties == null
+                ? ""
+                : $"filter_properties={string.Join("&filter_properties=", filterProperties)}";
+
+            var response = await httpClient.PostAsJsonAsync(string.Format(urlFormat, config.DatabaseId, queryParams), new { filter, sorts }, JsonOptions);
+            var result = await response.GetFromResponse<PagesList>(JsonOptions);
+
+            return result;
         }
     }
 }

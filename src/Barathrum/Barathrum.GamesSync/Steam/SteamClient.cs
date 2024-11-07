@@ -1,5 +1,4 @@
 ﻿using Barathrum.GamesSync.Steam.Models;
-using System.Net.Http.Json;
 
 namespace Barathrum.GamesSync.Steam
 {
@@ -13,13 +12,9 @@ namespace Barathrum.GamesSync.Steam
             const string urlFormat = "IPlayerService/GetOwnedGames/v0001?key={0}&steamid={1}&format=json&include_appinfo=1&include_played_free_game=0";
 
             var response = await httpClient.GetAsync(string.Format(urlFormat, config.ApiKey, steamId));
+            var result = await response.GetFromResponse<SteamApiResponse<GetOwnedGamesResponse>>();
 
-            response.EnsureSuccessStatusCode();
-
-            var model = await response.Content.ReadFromJsonAsync<SteamApiResponse<GetOwnedGamesResponse>>()
-                ?? throw new Exception("Can't deserialize response to model");
-
-            return model.Response.Games;
+            return result.Response.Games;
         }
     }
 }

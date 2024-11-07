@@ -76,7 +76,6 @@ foreach (var account in steamConfig.Accounts)
 foreach (var game in games.Values)
 {
     var page = await notionClient.CreatePage(game.Name!, [.. accounts[game.AppId]], true, game.AppId, false);
-    Console.WriteLine(page.id);
 }
 
 Console.WriteLine("Bye");
