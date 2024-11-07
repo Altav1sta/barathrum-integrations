@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Barathrum.GamesSync.Steam.Models
+namespace Barathrum.GamesSync.Steam.Models.Response
 {
     internal class GetOwnedGamesResponse
     {

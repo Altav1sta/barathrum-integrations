@@ -4,6 +4,7 @@
     {
         public required string ApiKey { get; init; }
         public required string BaseAddress { get; init; }
+        public required string PersonalAccount { get; init; }
         public required string[] Accounts { get; init; }
     }
 }

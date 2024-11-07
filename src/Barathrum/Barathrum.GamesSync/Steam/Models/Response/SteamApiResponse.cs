@@ -1,4 +1,4 @@
-﻿namespace Barathrum.GamesSync.Steam.Models
+﻿namespace Barathrum.GamesSync.Steam.Models.Response
 {
     internal class SteamApiResponse<T>
     {
