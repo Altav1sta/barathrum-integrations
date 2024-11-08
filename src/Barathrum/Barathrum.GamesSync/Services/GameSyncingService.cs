@@ -4,6 +4,8 @@ using Barathrum.GamesSync.Notion.Models.Blocks;
 using Barathrum.GamesSync.Notion.Models;
 using Barathrum.GamesSync.Steam;
 using Barathrum.GamesSync.Steam.Models;
+using System.Diagnostics.Metrics;
+using System.Reflection;
 
 namespace Barathrum.GamesSync.Services
 {
@@ -13,6 +15,24 @@ namespace Barathrum.GamesSync.Services
         private readonly SteamConfig steamConfig = steamConfig;
         private readonly NotionClient notionClient = notionClient;
         private readonly NotionConfig notionConfig = notionConfig;
+
+
+        public async Task ClearNotionDatabase(Guid databaseId)
+        {
+            Console.WriteLine("Deleting all records in Notion database...");
+
+            var pages = await notionClient.QueryDatabase(databaseId, []);
+            var counter = 1;
+
+            foreach (var page in pages)
+            {
+                Console.Write("\rDeleting page {0} out of {1}", counter, pages.Length);
+                counter++;
+                await notionClient.DeletePage(page.id!);
+            }
+
+            Console.WriteLine();
+        }
 
         public async Task<Player[]> GetSteamAccounts()
         {
@@ -27,11 +47,15 @@ namespace Barathrum.GamesSync.Services
         {
             Console.WriteLine("Getting available games from Steam accounts...");
 
+            var counter = 1;
             var accounts = steamConfig.Accounts.All;
             var accountsGames = new Dictionary<string, Game[]>(accounts.Length);
 
             foreach (var account in accounts)
             {
+                Console.Write("\rGetting games for account {0} out of {1}", counter, accounts.Length);
+                counter++;
+
                 var allGames = await steamClient.GetGamesList(account, true);
                 var paidGames = await steamClient.GetGamesList(account, false);
                 var paidGamesIds = paidGames.Select(x => x.AppId).ToHashSet();
@@ -47,6 +71,8 @@ namespace Barathrum.GamesSync.Services
                 accountsGames[account] = allGames;
             }
 
+            Console.WriteLine();
+
             return accountsGames;
         }
 
@@ -54,8 +80,13 @@ namespace Barathrum.GamesSync.Services
         {
             Console.WriteLine("Adding accounts to Notion database...");
 
+            var counter = 1;
+
             foreach (var player in players)
             {
+                Console.Write("\rAdding account {0} out of {1}", counter, players.Length);
+                counter++;
+
                 var properties = new Dictionary<string, PageProperty>
                 {
                     { "Name", new() { type = PropertyType.title, title = [ new RichTextObject { type = RichTextObjectType.Text, text = new Text { content = player.Name } } ] } },
@@ -75,6 +106,8 @@ namespace Barathrum.GamesSync.Services
                 var page = await notionClient.CreatePage(notionConfig.AccountsDbId, properties);
                 var children = await notionClient.AppendBlockChildren(page.id!, [image]);
             }
+
+            Console.WriteLine();
         }
 
         public async Task AddGamesToNotion(Dictionary<string, Game[]> accountsGames)
@@ -85,8 +118,13 @@ namespace Barathrum.GamesSync.Services
 
             Console.WriteLine("Adding games to Notion database...");
 
+            var counter = 1;
+
             foreach (var gameAccounts in gamesAccounts)
             {
+                Console.Write("\rAdding game {0} out of {1}", counter, gamesAccounts.Count);
+                counter++;
+
                 var properties = new Dictionary<string, PageProperty>
                 {
                     { "Shared Accounts", new() { type = PropertyType.relation, relation = gameAccounts.Value.Select(x => new Page { id = accountsPageIds[x] }).ToArray() } },
@@ -97,6 +135,8 @@ namespace Barathrum.GamesSync.Services
                 };
                 var page = await notionClient.CreatePage(notionConfig.GamesDbId, properties);
             }
+
+            Console.WriteLine();
         }
 
 
@@ -144,7 +184,7 @@ namespace Barathrum.GamesSync.Services
 
             var filterProperties = new string[] { db.properties["AccountId"].id! };
             var pages = await notionClient.QueryDatabase(notionConfig.AccountsDbId, filterProperties);
-            var result = pages.results!.ToDictionary(x => x.properties!["AccountId"]!.rich_text![0]!.text!.content, x => x.id!);
+            var result = pages.ToDictionary(x => x.properties!["AccountId"]!.rich_text![0]!.text!.content, x => x.id!);
 
             return result;
         }

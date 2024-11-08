@@ -50,6 +50,16 @@ namespace Barathrum.GamesSync.Notion
             return result;
         }
 
+        public async Task<Page> DeletePage(string pageId)
+        {
+            var url = $"v1/pages/{pageId}";
+
+            var response = await httpClient.PatchAsJsonAsync(url, new { in_trash = true }, JsonOptions);
+            var result = await response.GetFromResponse<Page>(JsonOptions);
+
+            return result;
+        }
+
         public async Task<Database> GetDatabase(Guid databaseId)
         {
             const string urlFormat = "v1/databases/{0}";
@@ -60,7 +70,7 @@ namespace Barathrum.GamesSync.Notion
             return result;
         }
 
-        public async Task<ObjectList<Page>> QueryDatabase(Guid databaseId, string[]? filterProperties = null, FilterObject? filter = null, SortObject[]? sorts = null)
+        public async Task<Page[]> QueryDatabase(Guid databaseId, string[]? filterProperties = null, FilterObject? filter = null, SortObject[]? sorts = null)
         {
             const string urlFormat = "v1/databases/{0}/query/{1}";
 
@@ -68,10 +78,28 @@ namespace Barathrum.GamesSync.Notion
                 ? ""
                 : $"?filter_properties={string.Join("&filter_properties=", filterProperties)}";
 
-            var response = await httpClient.PostAsJsonAsync(string.Format(urlFormat, databaseId, queryParams), new { filter, sorts }, JsonOptions);
-            var result = await response.GetFromResponse<ObjectList<Page>>(JsonOptions);
+            var result = new List<Page>();
+            var startCursor = (string?) null;
 
-            return result;
+            while (true)
+            {
+                var response = await httpClient.PostAsJsonAsync(
+                    string.Format(urlFormat, databaseId, queryParams), 
+                    new { filter, sorts, start_cursor = startCursor }, 
+                    JsonOptions);
+
+                var partialResult = await response.GetFromResponse<ObjectList<Page>>(JsonOptions);
+
+                result.AddRange(partialResult.results!);
+                startCursor = partialResult.next_cursor;
+
+                if (partialResult.has_more == false)
+                {
+                    break;
+                }
+            }
+
+            return [.. result];
         }
     }
 }

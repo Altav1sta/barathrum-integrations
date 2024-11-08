@@ -52,8 +52,11 @@ internal class Program
         var accounts = await syncService.GetSteamAccounts();
         var accountsGames = await syncService.GetAccountsGames();
 
-        await syncService.AddAccountsToNotion(accounts);
-        await syncService.AddGamesToNotion(accountsGames);
+        await syncService.ClearNotionDatabase(notionConfig.GamesDbId);
+        await syncService.ClearNotionDatabase(notionConfig.AccountsDbId);
+
+        //await syncService.AddAccountsToNotion(accounts);
+        //await syncService.AddGamesToNotion(accountsGames);
 
 
         Console.WriteLine("Success. Bye");
