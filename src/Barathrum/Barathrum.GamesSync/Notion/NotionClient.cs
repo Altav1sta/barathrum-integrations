@@ -29,7 +29,12 @@ namespace Barathrum.GamesSync.Notion
             return result;
         }
 
-        public async Task<Page> CreatePage(Guid databaseId, Dictionary<string, PageProperty> properties, FileObject? cover = null)
+        public Task<Page> CreatePage(Guid databaseId, Dictionary<string, PageProperty> properties, FileObject? cover = null)
+        {
+            return CreatePage<object>(databaseId, properties, null, cover);
+        }
+
+        public async Task<Page> CreatePage<T>(Guid databaseId, Dictionary<string, PageProperty> properties, T[]? children, FileObject? cover = null)
         {
             const string url = "v1/pages";
 
@@ -39,7 +44,7 @@ namespace Barathrum.GamesSync.Notion
                 database_id = databaseId
             };
 
-            var response = await httpClient.PostAsJsonAsync(url, new { parent, properties, cover }, JsonOptions);
+            var response = await httpClient.PostAsJsonAsync(url, new { parent, properties, children, cover }, JsonOptions);
             var result = await response.GetFromResponse<Page>(JsonOptions);
 
             return result;
@@ -61,7 +66,7 @@ namespace Barathrum.GamesSync.Notion
 
             var queryParams = filterProperties == null
                 ? ""
-                : $"filter_properties={string.Join("&filter_properties=", filterProperties)}";
+                : $"?filter_properties={string.Join("&filter_properties=", filterProperties)}";
 
             var response = await httpClient.PostAsJsonAsync(string.Format(urlFormat, databaseId, queryParams), new { filter, sorts }, JsonOptions);
             var result = await response.GetFromResponse<ObjectList<Page>>(JsonOptions);

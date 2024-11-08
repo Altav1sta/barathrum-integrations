@@ -24,5 +24,9 @@ namespace Barathrum.GamesSync.Steam.Models
 
         [JsonPropertyName("content_descriptorids")]
         public int[]? ContentDesciptorIds { get; init; }
+
+
+        [JsonIgnore]
+        public bool IsFreeToPlay { get; set; }
     }
 }
